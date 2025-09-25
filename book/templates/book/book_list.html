@@ -1,0 +1,40 @@
+{% extends "book/base.html" %}
+
+{% block title %}Book List{% endblock title %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="btn-group">
+            <a href="{% url 'book-list' %}" class="btn btn-outline-primary {% if not request.GET.genre %}active{% endif %}">All</a>
+            <a href="?genre=fiction" class="btn btn-outline-primary {% if request.GET.genre == 'fiction' %}active{% endif %}">Fiction</a>
+            <a href="?genre=non_fiction" class="btn btn-outline-primary {% if request.GET.genre == 'non_fiction' %}active{% endif %}">Non-Fiction</a>
+            <a href="?genre=science" class="btn btn-outline-primary {% if request.GET.genre == 'science' %}active{% endif %}">Science</a>
+            <a href="?genre=history" class="btn btn-outline-primary {% if request.GET.genre == 'history' %}active{% endif %}">History</a>
+
+        </div>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for book in books %}
+    
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ book.title }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">by {{ book.author }}</h6>
+                <p class="card-text">{{ book.description|truncatewords:30 }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{% url 'book-detail' book.pk %}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>   
+        </div>
+    </div>
+    {% empty %}
+        <div class="col-12">
+            <p>No books available.</p>
+        </div>
+    {% endfor %}
+    </div>
+{% endblock content %}
