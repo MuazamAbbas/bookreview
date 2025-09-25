@@ -1,40 +1,94 @@
-{% extends "book/base.html" %}
+{% extends 'book/base.html' %}
 
 {% block title %}Book List{% endblock title %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col">
-        <div class="btn-group">
-            <a href="{% url 'book-list' %}" class="btn btn-outline-primary {% if not request.GET.genre %}active{% endif %}">All</a>
-            <a href="?genre=fiction" class="btn btn-outline-primary {% if request.GET.genre == 'fiction' %}active{% endif %}">Fiction</a>
-            <a href="?genre=non_fiction" class="btn btn-outline-primary {% if request.GET.genre == 'non_fiction' %}active{% endif %}">Non-Fiction</a>
-            <a href="?genre=science" class="btn btn-outline-primary {% if request.GET.genre == 'science' %}active{% endif %}">Science</a>
-            <a href="?genre=history" class="btn btn-outline-primary {% if request.GET.genre == 'history' %}active{% endif %}">History</a>
+<h2 class="mb-4 text-primary">📚 Book Collection</h2>
 
-        </div>
+<!-- Search + Filter -->
+<form method="get" class="row g-2 align-items-center mb-4">
+  <div class="col-md-4">
+    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="🔍 Search by title or author">
+  </div>
+  <div class="col-md-3">
+    <select name="genre" class="form-select">
+      <option value="">All Genres</option>
+      <option value="fiction" {% if genre == "fiction" %}selected{% endif %}>Fiction</option>
+      <option value="non_fiction" {% if genre == "non_fiction" %}selected{% endif %}>Non-Fiction</option>
+      <option value="science" {% if genre == "science" %}selected{% endif %}>Science</option>
+      <option value="technology" {% if genre == "technology" %}selected{% endif %}>Technology</option>
+      <option value="history" {% if genre == "history" %}selected{% endif %}>History</option>
+      <option value="other" {% if genre == "other" %}selected{% endif %}>Other</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button type="submit" class="btn btn-primary w-100">Filter</button>
+  </div>
+  <div class="col-md-2">
+    <a href="{% url 'book-list' %}" class="btn btn-outline-secondary w-100">Reset</a>
+  </div>
+</form>
+
+<!-- Book Cards -->
+<div class="row row-cols-1 row-cols-md-3 g-4">
+  {% for book in page_obj %}
+  <div class="col">
+    <div class="card h-100 shadow-sm border-0">
+      <div class="card-body">
+        <h5 class="card-title text-dark">{{ book.title }}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">by {{ book.author }}</h6>
+
+        <!-- Average Rating (Dynamic Stars) -->
+        <p class="mb-2">
+          {% with total=5 filled=book.average_rating|floatformat:0 %}
+            {% for i in "12345" %}
+              {% if forloop.counter <= filled %}
+                <i class="bi bi-star-fill text-warning"></i>
+              {% else %}
+                <i class="bi bi-star text-warning"></i>
+              {% endif %}
+            {% endfor %}
+          {% endwith %}
+          <small class="text-muted">({{ book.average_rating }}/5)</small>
+        </p>
+
+        <p class="card-text small text-secondary">
+          {{ book.description|truncatewords:20 }}
+        </p>
+      </div>
+      <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+        <span class="badge bg-info text-dark">{{ book.genre|title }}</span>
+        <a href="{% url 'book-detail' book.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+      </div>
     </div>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="alert alert-warning">No books available.</div>
+  </div>
+  {% endfor %}
 </div>
 
-<div class="row row-cols-1 row-cols-md-3 g-4">
-    {% for book in books %}
-    
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">{{ book.title }}</h5>
-                <h6 class="card-subtitle mb-2 text-muted">by {{ book.author }}</h6>
-                <p class="card-text">{{ book.description|truncatewords:30 }}</p>
-                <div class="d-flex justify-content-between align-items-center">
-                    <a href="{% url 'book-detail' book.pk %}" class="btn btn-primary">View Details</a>
-                </div>
-            </div>   
-        </div>
-    </div>
-    {% empty %}
-        <div class="col-12">
-            <p>No books available.</p>
-        </div>
-    {% endfor %}
-    </div>
+<!-- Pagination -->
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Page navigation">
+  <ul class="pagination justify-content-center mt-4">
+    {% if page_obj.has_previous %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if genre %}&genre={{ genre }}{% endif %}{% if query %}&q={{ query }}{% endif %}">Previous</a>
+    </li>
+    {% endif %}
+
+    <li class="page-item active">
+      <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    </li>
+
+    {% if page_obj.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if genre %}&genre={{ genre }}{% endif %}{% if query %}&q={{ query }}{% endif %}">Next</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
 {% endblock content %}
